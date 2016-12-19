@@ -16,16 +16,13 @@ object AjaxLoader {
     var completedFiles = 0
     val results = mutable.HashMap[RemoteAsset,AjaxResult]()
     for (i <- 0 until totalFiles) {
-      dom.console.log(files(i).toString)
       val remoteAsset = files(i)
       remoteAsset match {
         case BinaryAsset(fileName) =>
-          dom.console.log("Binary")
           val xhr = new XMLHttpRequest
           xhr.responseType = "arraybuffer"
           xhr.open("GET", "/assets/" + fileName)
           xhr.send()
-          dom.console.log(xhr)
           xhr.onload = { (e: Event) =>
             if (xhr.status == 200) {
               val arrayBuffer = xhr.response.asInstanceOf[ArrayBuffer]
@@ -40,11 +37,23 @@ object AjaxLoader {
           val imgElement: HTMLImageElement = dom.document.createElement("img").asInstanceOf[HTMLImageElement]
           imgElement.src = "/assets/" + fileName
           imgElement.onload = { (e: Event) =>
-            org.scalajs.dom.console.log(imgElement, e)
             results(remoteAsset) = new AjaxImageResult(imgElement)
             completedFiles += 1
             if (completedFiles == totalFiles) {
               callback(results)
+            }
+          }
+        case TextAsset(fileName) =>
+          val xhr = new XMLHttpRequest
+          xhr.open("GET", "/assets/" + fileName)
+          xhr.send()
+          xhr.onload = { (e: Event) =>
+            if (xhr.status == 200) {
+              results(remoteAsset) = new AjaxTextResult(xhr.responseText)
+              completedFiles += 1
+              if (completedFiles == totalFiles) {
+                callback(results)
+              }
             }
           }
       }
@@ -55,7 +64,9 @@ object AjaxLoader {
 abstract class RemoteAsset
 case class BinaryAsset(file: String) extends RemoteAsset
 case class ImageAsset(file: String) extends RemoteAsset
+case class TextAsset(file: String) extends RemoteAsset
 
 abstract class AjaxResult
 class AjaxImageResult(val image: HTMLImageElement) extends AjaxResult
 class AjaxBinaryResult(val bin: BinaryBuffer) extends AjaxResult
+class AjaxTextResult(val text: String) extends AjaxResult

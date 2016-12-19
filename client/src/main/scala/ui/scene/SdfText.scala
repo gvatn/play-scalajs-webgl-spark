@@ -16,13 +16,13 @@ object SdfText {
 
   def apply(glContext: GLContext, text: String, fontFiles: FontFiles): SceneItem = {
     val font = BMFont.parse(fontFiles.bin)
-    val textLayout = new TextLayout(text, font, 80, TextLayout.AlignLeft, 0, 4)
-    val test = 6
+    val textLayout = new TextLayout(text, font, 100, TextLayout.AlignLeft, 0, 4)
+    val test = 7
     textLayout.update()
     val glProgram = new Program(
       glContext,
-      new Shader(LoadFile.syncLoad("sdf-text/vert")),
-      new Shader(LoadFile.syncLoad("sdf-text/frag")),
+      new Shader(LoadFile.syncLoad("shaders/sdf-text/vert.glsl")),
+      new Shader(LoadFile.syncLoad("shaders/sdf-text/frag.glsl")),
       List(
         Attribute("position", DataType.GlFloat, 2),
         Attribute("uv", DataType.GlFloat, 2)

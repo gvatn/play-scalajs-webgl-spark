@@ -27,8 +27,8 @@ val test =1
     textLayout.update()
     val glProgram = new Program(
       glContext,
-      new Shader(LoadFile.syncLoad("simple-text/vert")),
-      new Shader(LoadFile.syncLoad("simple-text/frag")),
+      new Shader(LoadFile.syncLoad("shaders/simple-text/vert.glsl")),
+      new Shader(LoadFile.syncLoad("shaders/simple-text/frag.glsl")),
       List(
         Attribute("position", DataType.GlFloat, 2),
         Attribute("uv", DataType.GlFloat, 2)

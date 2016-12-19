@@ -1,13 +1,18 @@
 package ui
 
 import org.scalajs.dom
-import org.scalajs.dom.raw.WebGLRenderingContext
+import org.scalajs.dom.html.Canvas
+import org.scalajs.dom.raw.{HTMLCanvasElement, WebGLRenderingContext}
 
 class GLContext(val elementId: String) {
   var gl: WebGLRenderingContext = _
 
+  var element: Canvas = _
+
   def init(): Unit = {
-    val el = dom.document.getElementById(elementId).asInstanceOf[dom.html.Canvas]
-    gl = el.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext]
+    import dom.raw.WebGLRenderingContext._
+    element = dom.document.getElementById(elementId).asInstanceOf[Canvas]
+    gl = element.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext]
+    gl.enable(DEPTH_TEST)
   }
 }

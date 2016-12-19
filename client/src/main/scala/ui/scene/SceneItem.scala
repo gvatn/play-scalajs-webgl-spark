@@ -9,7 +9,7 @@ import ui.program.Program
 
 
 class SceneItem(val program: Program,
-                val buffers: Seq[ArrayBuffer],
+                val buffers: Seq[ArrayBuffer] = Seq[ArrayBuffer](),
                 val indexBuffer: ElementBuffer = null,
                 val translate: Vec2 = new Vec2(0f, 0f),
                 val scale: Vec2 = new Vec2(1f, 1f),
@@ -20,6 +20,7 @@ class SceneItem(val program: Program,
   val textureUniforms: mutable.Map[String,WebGLUniformLocation] = new mutable.HashMap[String,WebGLUniformLocation]()
 
   var modelMatrixUniform: WebGLUniformLocation = _
+
 
   def modelMatrix(): Mat3 = {
     // Translation, rotation and scale

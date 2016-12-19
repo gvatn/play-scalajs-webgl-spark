@@ -13,8 +13,8 @@ class Program(
                val gLContext: GLContext,
                val vertShader: Shader,
                val fragShader: Shader,
-               val attributes: List[Attribute],
-               val uniforms: List[Uniform]) {
+               val attributes: Seq[Attribute] = Seq[Attribute](),
+               val uniforms: Seq[Uniform] = Seq[Uniform]()) {
 
   var program: Option[WebGLProgram] = None
 

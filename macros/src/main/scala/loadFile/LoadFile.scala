@@ -15,7 +15,7 @@ object LoadFile {
   def syncLoadImpl(c: Context)(fileName: c.Expr[String]): c.Expr[String] = {
     import c.universe._
     val Literal(Constant(fileNameStr)) = fileName.tree
-    val fileContents = Source.fromFile("./client/src/main/resources/" + fileNameStr + ".glsl").getLines.mkString("\n")
+    val fileContents = Source.fromFile("./server/public/" + fileNameStr).getLines.mkString("\n")
     c.Expr[String](Literal(Constant(fileContents)))
   }
 
@@ -25,11 +25,11 @@ object LoadFile {
     import c.universe._
     val Literal(Constant(fileNameStr)) = fileName.tree
     return c.Expr[String](Literal(Constant(new String(""))))
-    //val bis = new BufferedInputStream(new FileInputStream("./client/src/main/resources/" + fileNameStr))
+    //val bis = new BufferedInputStream(new FileInputStream("./server/public/" + fileNameStr))
     // Get byte array for base64 encoding
     //val fileBytes = Stream.continually(bis.read).takeWhile(-1 != _).map(_.toByte).toArray
     //val fileBytes = IOUtils.toByteArray(bis)
-    val fileBytes = Files.readAllBytes(Paths.get("./client/src/main/resources/" + fileNameStr))
+    val fileBytes = Files.readAllBytes(Paths.get("./server/public/" + fileNameStr))
     c.Expr[String](Literal(Constant(new String(Base64.encodeBase64(fileBytes)))))
   }
 }
