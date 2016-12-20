@@ -9,6 +9,7 @@ import ui.shader.builder.types._
 
 import scala.collection.mutable.ListBuffer
 import org.scalajs.dom
+import ui.math.Vec2
 import ui.program.{Attribute, DataType}
 import ui.shader.builder.value._
 
@@ -62,12 +63,7 @@ class SdfScene {
       GlBlock(
         GlAssign(
           GlGlobals.Color,
-          GlCall(
-            "mix", GlVec4Type(),
-            Colors.black,
-            Colors.white,
-            sdfShape()
-          )
+          GlFuncs.mix(Colors.black, Colors.white, sdfShape())
         )
       )
     )
@@ -77,69 +73,71 @@ class SdfScene {
 
     smoothBorder(
       subtract(
-        circle(animateFloat(0.25f, 0.2f)),
-        box(0.4f, 0.4f)
+        circle(animateFloat(0.25f, 0.2f), pointTranslate(Vec2(-0.2f, 0.0f))),
+        box(0.4f, 0.4f, pointRotate(animateFloat(0.25f, 0.2f)))
       )
     )
 
   }
 
-  def animateFloat(constant: GlValue[GlFloatType] = new GlFloatVal(0f),
-                   coef: GlValue[GlFloatType] = new GlFloatVal(1f)): GlValue[GlFloatType] = {
-    GlAdd(
-      GlMultiply(
-        GlFunctions.sin(GlVar("iGlobalTime", GlFloatType())),
-        coef
-      ),
-      constant
-    )
-  }
+  def circle(radius: GlValue[GlFloatType],
+             point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlFloatType] = {
 
-  def smoothBorder(glValue: GlValue[GlFloatType]): GlValue[GlFloatType] = {
-    GlFunctions.smoothstep(0f, 0.005f, glValue)
-  }
-
-  def union(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
-    GlFunctions.min(sdf1, sdf2)
-  }
-
-  def subtract(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
-    GlCall(
-      "max", GlFloatType(),
-      GlMultiply(GlFloatVal(-1f), sdf1),
-      sdf2
-    )
-  }
-
-  def intersect(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
-    GlCall(
-      "max", GlFloatType(),
-      sdf1,
-      sdf2
-    )
-  }
-
-  def circle(radius: GlValue[GlFloatType]): GlValue[GlFloatType] = {
     GlBraces(
-      GlSubtract(
-        radius,
-        GlCall("length", GlVec2Type(), GlVar("vPosition", GlVec2Type()))
-      )
+      GlFuncs.length(point) - radius
     )
   }
 
-  def box(width: GlValue[GlFloatType], height: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+  def box(width: GlValue[GlFloatType], height: GlValue[GlFloatType],
+          point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlFloatType] = {
+
     GlBraces(
       GlCall("length", GlFloatType(),
         GlCall("max", GlVec2Type(),
-          GlSubtract(
-            GlVec2Val(width, height),
-            GlCall("abs", GlVec2Type(), GlVar("vPosition", GlVec2Type()))
-          ),
+          GlFuncs.abs(point) - GlVec2Val(width, height),
           GlVec2Val(0f, 0f)
         )
       )
     )
   }
+
+  def pointTranslate(translation: GlValue[GlVec2Type],
+          point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
+    GlBraces(
+      point - translation
+    )
+  }
+
+  def pointRotate(rotation: GlValue[GlFloatType],
+          point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
+    GlBraces(
+      point * GlMat2Val(
+        GlFuncs.cos(rotation), GlFuncs.sin(rotation) * GlFloatVal(-1f),
+        GlFuncs.sin(rotation), GlFuncs.cos(rotation)
+      )
+    )
+  }
+
+  def animateFloat(constant: GlValue[GlFloatType] = new GlFloatVal(0f),
+                   coef: GlValue[GlFloatType] = new GlFloatVal(1f)): GlValue[GlFloatType] = {
+    constant + GlBraces(coef * GlFuncs.sin(GlVar("iGlobalTime", GlFloatType())))
+  }
+
+  def smoothBorder(glValue: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlFuncs.smoothstep(0f, 0.005f, glValue)
+  }
+
+  def union(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlFuncs.min(sdf1, sdf2)
+  }
+
+  def subtract(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlFuncs.max(GlMultiply(GlFloatVal(-1f), sdf1), sdf2)
+  }
+
+  def intersect(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlFuncs.max(sdf1, sdf2)
+  }
+
 
 }

@@ -6,7 +6,7 @@ import ui.shader.builder.value.GlValue
 class GlAdd[T <: GlType, U <: GlType](val operand1: GlValue[T],
                                            val operand2: GlValue[U]) extends GlValue[T] {
   override def toGlsl: String = {
-    s"${operand2.toGlsl} + ${operand1.toGlsl}"
+    s"${operand1.toGlsl} + ${operand2.toGlsl}"
   }
 }
 
