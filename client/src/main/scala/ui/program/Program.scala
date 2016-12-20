@@ -1,13 +1,14 @@
 package ui.program
 
 import org.scalajs.dom
-import org.scalajs.dom.raw.{WebGLProgram, WebGLShader}
+import org.scalajs.dom.raw.{WebGLProgram, WebGLShader, WebGLUniformLocation}
 import ui.scene.SceneItem
 import ui.shader.Shader
 import ui.GLContext
 
 import scala.collection.mutable
 
+import scala.scalajs.js
 
 class Program(
                val gLContext: GLContext,
@@ -19,6 +20,12 @@ class Program(
   var program: Option[WebGLProgram] = None
 
   val attributePositions: mutable.Map[Attribute,Int] = mutable.Map[Attribute,Int]()
+
+  val uniformPositions: mutable.Map[Uniform,WebGLUniformLocation] = mutable.Map[Uniform,WebGLUniformLocation]()
+
+  val uniformValuesF: mutable.Map[Uniform,Double] = mutable.Map[Uniform,Double]()
+
+  var startTime: Double = 0d
 
   def init(): Unit = {
     import dom.raw.WebGLRenderingContext._
@@ -39,14 +46,27 @@ class Program(
       attributePositions += attribute -> attributePos
       gl.enableVertexAttribArray(attributePos)
     })
+    uniforms.foreach((uniform: Uniform) => {
+      val uniformPos = gl.getUniformLocation(programRef, uniform.name)
+      uniformPositions += uniform -> uniformPos
+      uniform.dataType match {
+        case DataType.GlFloat =>
+          uniformValuesF(uniform) = 0.0f
+      }
+    })
   }
 
-  def ref: WebGLProgram = {
-    val Some(programRef) = program
-    programRef
+  def ref: WebGLProgram = program match {
+    case Some(ref) => ref
+    case None => throw new Exception("No webgl reference")
   }
 
   def draw(sceneItem: SceneItem, numItems: Int): Unit = {
+    if (startTime == 0) {
+      startTime = js.Date.now()
+    }
+    val elapsed = (js.Date.now() - startTime) / 1000d
+    uniformValuesF(Uniform("iGlobalTime", DataType.GlFloat)) = elapsed
     import dom.raw.WebGLRenderingContext._
     val gl = gLContext.gl
     // Activate shader attributes
@@ -71,6 +91,13 @@ class Program(
     var totalSize = 0
     attributes.foreach((attribute) => totalSize += attribute.size)
     //val totalSize: Int = attributes.fold(0)((size, attribute) => size + attribute.size)
+    uniforms.foreach((uniform: Uniform) => {
+      uniform.dataType match {
+        case DataType.GlFloat =>
+          gl.uniform1f(uniformPositions(uniform), uniformValuesF(uniform))
+      }
+    })
+    // Time uniform
     if (sceneItem.indexBuffer != null) {
       val numEls = sceneItem.indexBuffer.data.length
       gl.drawElements(TRIANGLES, numEls, UNSIGNED_SHORT, 0)

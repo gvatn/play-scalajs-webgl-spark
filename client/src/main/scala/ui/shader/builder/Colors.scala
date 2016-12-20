@@ -1,6 +1,7 @@
 package ui.shader.builder
 
-import ui.shader.builder.value.GlVec4Val
+import ui.shader.builder.types.GlVec4Type
+import ui.shader.builder.value.{GlValue, GlVec4Val}
 
 object Colors {
   def white: GlVec4Val = GlVec4Val(1f, 1f, 1f, 1f)

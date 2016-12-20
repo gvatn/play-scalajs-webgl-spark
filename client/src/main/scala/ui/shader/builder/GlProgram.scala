@@ -1,7 +1,7 @@
 package ui.shader.builder
 
 import ui.GLContext
-import ui.program.{Attribute, DataType, Program}
+import ui.program.{Attribute, DataType, Program, Uniform}
 
 class GlProgram(val vertexShader: GlVertexShader,
                 val fragmentShader: GlFragmentShader) {
@@ -11,7 +11,8 @@ class GlProgram(val vertexShader: GlVertexShader,
       glContext,
       vertexShader.createShader(),
       fragmentShader.createShader(),
-      Seq(Attribute("position", DataType.GlFloat, 2))
+      Seq(Attribute("position", DataType.GlFloat, 2)),
+      Seq(Uniform("iGlobalTime", DataType.GlFloat))
     )
   }
 }

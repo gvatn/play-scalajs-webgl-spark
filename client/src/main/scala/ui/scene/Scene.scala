@@ -3,6 +3,8 @@ package ui.scene
 import ui.GLContext
 import org.scalajs.dom
 import ui.math.{Vec3, Vec4}
+import scala.scalajs.js
+import org.scalajs.dom
 
 import scala.collection.mutable.ListBuffer
 
@@ -27,6 +29,9 @@ class Scene(val gLContext: GLContext,
     gl.clear(COLOR_BUFFER_BIT)
     items.foreach((item: SceneItem) => {
       item.draw()
+    })
+    dom.window.requestAnimationFrame((deltaTime: Double) => {
+      draw()
     })
   }
 }

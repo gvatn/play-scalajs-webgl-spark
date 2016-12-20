@@ -53,7 +53,9 @@ class SdfScene {
   def createFragmentShader(): GlFragmentShader = {
     new GlFragmentShader(
       ListBuffer[GlAttribute[GlType]](),
-      ListBuffer[GlUniform[GlType]](),
+      ListBuffer[GlUniform[GlType]](
+        GlUniform("iGlobalTime", GlFloatType())
+      ),
       ListBuffer[GlVarying[GlType]](
         GlVarying("vPosition", GlVec2Type())
       ),
@@ -61,42 +63,81 @@ class SdfScene {
         GlAssign(
           GlGlobals.Color,
           GlCall(
-            "mix",
-            GlVec4Type(),
+            "mix", GlVec4Type(),
             Colors.black,
             Colors.white,
-            smoothBorder(circle(0.5f))
+            sdfShape()
           )
         )
       )
     )
   }
 
+  def sdfShape(): GlValue[GlFloatType] = {
+
+    smoothBorder(
+      subtract(
+        circle(animateFloat(0.25f, 0.2f)),
+        box(0.4f, 0.4f)
+      )
+    )
+
+  }
+
+  def animateFloat(constant: GlValue[GlFloatType] = new GlFloatVal(0f),
+                   coef: GlValue[GlFloatType] = new GlFloatVal(1f)): GlValue[GlFloatType] = {
+    GlAdd(
+      GlMultiply(
+        GlFunctions.sin(GlVar("iGlobalTime", GlFloatType())),
+        coef
+      ),
+      constant
+    )
+  }
+
   def smoothBorder(glValue: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlFunctions.smoothstep(0f, 0.005f, glValue)
+  }
+
+  def union(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlFunctions.min(sdf1, sdf2)
+  }
+
+  def subtract(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
     GlCall(
-      "smoothstep",
-      GlFloatType(),
-      GlFloatVal(0.0f),
-      GlFloatVal(0.005f),
-      glValue
+      "max", GlFloatType(),
+      GlMultiply(GlFloatVal(-1f), sdf1),
+      sdf2
     )
   }
 
-  def circle(radius: Float = 0.5f): GlValue[GlFloatType] = {
-    GlSubtract(
-      GlFloatVal(radius),
-      GlCall("length", GlVec2Type(), GlVar("vPosition", GlVec2Type()))
+  def intersect(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlCall(
+      "max", GlFloatType(),
+      sdf1,
+      sdf2
     )
   }
 
-  def box(width: Float, height: Float): GlValue[GlFloatType] = {
-    GlCall("length", GlFloatType(),
-      GlCall("max", GlVec2Type(),
-        GlSubtract(
-          GlVec2Val(width, height),
-          GlCall("abs", GlVec2Type(), GlVar("vPosition", GlVec2Type()))
-        ),
-        GlVec2Val(0f, 0f)
+  def circle(radius: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlBraces(
+      GlSubtract(
+        radius,
+        GlCall("length", GlVec2Type(), GlVar("vPosition", GlVec2Type()))
+      )
+    )
+  }
+
+  def box(width: GlValue[GlFloatType], height: GlValue[GlFloatType]): GlValue[GlFloatType] = {
+    GlBraces(
+      GlCall("length", GlFloatType(),
+        GlCall("max", GlVec2Type(),
+          GlSubtract(
+            GlVec2Val(width, height),
+            GlCall("abs", GlVec2Type(), GlVar("vPosition", GlVec2Type()))
+          ),
+          GlVec2Val(0f, 0f)
+        )
       )
     )
   }
