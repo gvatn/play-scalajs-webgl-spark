@@ -1,6 +1,6 @@
 package ui.shader.builder
 
-import ui.shader.builder.types.{GlFloatType, GlVec2Type, GlVec4Type}
+import ui.shader.builder.types.{GlFloatType, GlType, GlVec2Type, GlVec4Type}
 import ui.shader.builder.value.GlValue
 
 object GlFuncs {
@@ -43,7 +43,7 @@ object GlFuncs {
     )
   }
 
-  def mix(x: GlValue[GlVec4Type], y: GlValue[GlVec4Type], mix: GlValue[GlFloatType]): GlValue[GlVec4Type] = {
+  def mix[T <: GlType](x: GlValue[GlVec4Type], y: GlValue[GlVec4Type], mix: GlValue[T]): GlValue[GlVec4Type] = {
     GlCall(
       "mix", GlVec4Type(),
       x, y, mix
@@ -61,6 +61,14 @@ object GlFuncs {
     GlCall(
       "abs", GlVec2Type(),
       x
+    )
+  }
+
+  def mod(x: GlValue[GlVec2Type],
+          y: GlValue[GlVec2Type]): GlValue[GlVec2Type] = {
+    GlCall(
+      "mod", GlVec2Type(),
+      x, y
     )
   }
 }

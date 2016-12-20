@@ -11,6 +11,8 @@ import ui.program.{Attribute, DataType, Program, Uniform}
 import ui.scene._
 import ui.sdf.SdfScene
 import ui.shader.Shader
+import ui.shader.builder.types.{GlFloatType, GlVec4Type}
+import ui.shader.builder.value.GlValue
 import ui.texture.Texture
 
 import scala.scalajs.js.annotation.JSExport
@@ -42,7 +44,9 @@ object ClientMain extends js.JSApp {
 
   def createSdfScene(context: GLContext): Unit = {
     val scene = new Scene(context)
-    val sdfScene = Scenes.main
+    val sdfScene = new SdfScene {
+      override def getColor: GlValue[GlVec4Type] = Scenes.main
+    }
     scene.items += sdfScene.createSceneItem(context)
     scene.init()
     scene.draw()

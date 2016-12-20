@@ -64,10 +64,14 @@ class SdfScene {
       GlBlock(
         GlAssign(
           GlGlobals.Color,
-          GlFuncs.mix(Colors.black, Colors.white, smoothBorder(sdfShape()))
+          getColor
         )
       )
     )
+  }
+
+  def getColor: GlValue[GlVec4Type] = {
+    GlFuncs.mix(Colors.greenBlue, Colors.white, smoothBorder(sdfShape()))
   }
 
   def sdfShape(): GlValue[GlFloatType] = {
@@ -106,6 +110,27 @@ object SdfScene {
     )
   }
 
+  def layered(sdf1: GlValue[GlFloatType],
+              color: GlValue[GlVec4Type],
+              bgColor: GlValue[GlVec4Type] = GlVec4Val(1.0f, 1.0f, 1.0f, 1.0f),
+              mixFactor: GlValue[GlFloatType] = GlFloatVal(1f)): GlValue[GlVec4Type] = {
+    GlFuncs.mix(
+      bgColor,
+      color,
+      GlVec4Val.v3f(GlVec3Val(mixFactor, mixFactor, mixFactor) * GlBraces(1f - smoothBorder(sdf1)), 1f)
+    )
+  }
+
+  def colorSdf(sdf: GlValue[GlFloatType],
+               color: GlValue[GlVec4Type] = Colors.black,
+               bgColor: GlValue[GlVec4Type] = Colors.white): GlValue[GlVec4Type] = {
+    GlFuncs.mix(
+      color,
+      bgColor,
+      smoothBorder(sdf)
+    )
+  }
+
   def pointTranslate(translation: GlValue[GlVec2Type],
                      point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
     GlBraces(
@@ -123,9 +148,42 @@ object SdfScene {
     )
   }
 
+  def pointRotateAroundOrigin(rotation: GlValue[GlFloatType],
+                              originX: GlValue[GlFloatType],
+                              originY: GlValue[GlFloatType],
+                              point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
+    GlBraces(
+      GlVec3Val(
+        GlVec3Val(point, 1f) *
+        GlMat3Val(
+          1f, 0f, originX * -1f,
+          0f, 1f, originY * -1f,
+          0f, 0f, 1f
+        ) *
+        GlMat3Val(
+          GlFuncs.cos(rotation), GlFuncs.sin(rotation) * GlFloatVal(-1f), 0f,
+          GlFuncs.sin(rotation), GlFuncs.cos(rotation), 0f,
+          0f, 0f, 1f
+        ) *
+        GlMat3Val(
+          1f, 0f, originX,
+          0f, 1f, originY,
+          0f, 0f, 1f
+        )
+      ).xy
+    )
+  }
+
+  def repeatPoint(distance: GlValue[GlVec2Type],
+                  point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
+    GlFuncs.mod(point, distance) - GlBraces(distance * 0.5f)
+  }
+
   def animateFloat(constant: GlValue[GlFloatType] = new GlFloatVal(0f),
-                   coef: GlValue[GlFloatType] = new GlFloatVal(1f)): GlValue[GlFloatType] = {
-    constant + GlBraces(coef * GlFuncs.sin(GlVar("iGlobalTime", GlFloatType())))
+                   coef: GlValue[GlFloatType] = new GlFloatVal(1f),
+                   tAdjustment: GlValue[GlFloatType] = new GlFloatVal(0f)): GlValue[GlFloatType] = {
+
+    constant + GlBraces(coef * GlFuncs.sin(GlVar("iGlobalTime", GlFloatType()) + tAdjustment))
   }
 
   def smoothBorder(glValue: GlValue[GlFloatType]): GlValue[GlFloatType] = {
