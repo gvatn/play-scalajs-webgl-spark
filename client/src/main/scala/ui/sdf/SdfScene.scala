@@ -12,6 +12,7 @@ import org.scalajs.dom
 import ui.math.Vec2
 import ui.program.{Attribute, DataType}
 import ui.shader.builder.value._
+import SdfScene._
 
 class SdfScene {
   val sdfItems: ListBuffer[SdfItem] = ListBuffer[SdfItem]()
@@ -63,21 +64,25 @@ class SdfScene {
       GlBlock(
         GlAssign(
           GlGlobals.Color,
-          GlFuncs.mix(Colors.black, Colors.white, sdfShape())
+          GlFuncs.mix(Colors.black, Colors.white, smoothBorder(sdfShape()))
         )
       )
     )
   }
 
   def sdfShape(): GlValue[GlFloatType] = {
-
-    smoothBorder(
-      subtract(
-        circle(animateFloat(0.25f, 0.2f), pointTranslate(Vec2(-0.2f, 0.0f))),
-        box(0.4f, 0.4f, pointRotate(animateFloat(0.25f, 0.2f)))
-      )
+    subtract(
+      circle(animateFloat(0.25f, 0.2f), pointTranslate(Vec2(-0.2f, 0.0f))),
+      box(0.4f, 0.4f, pointRotate(animateFloat(0.25f, 0.2f)))
     )
+  }
+}
 
+object SdfScene {
+  def apply(shapeFunction: () => GlValue[GlFloatType]): SdfScene = {
+    new SdfScene {
+      override def sdfShape(): GlValue[GlFloatType] = shapeFunction()
+    }
   }
 
   def circle(radius: GlValue[GlFloatType],
@@ -102,14 +107,14 @@ class SdfScene {
   }
 
   def pointTranslate(translation: GlValue[GlVec2Type],
-          point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
+                     point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
     GlBraces(
       point - translation
     )
   }
 
   def pointRotate(rotation: GlValue[GlFloatType],
-          point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
+                  point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
     GlBraces(
       point * GlMat2Val(
         GlFuncs.cos(rotation), GlFuncs.sin(rotation) * GlFloatVal(-1f),
@@ -138,6 +143,5 @@ class SdfScene {
   def intersect(sdf1: GlValue[GlFloatType], sdf2: GlValue[GlFloatType]): GlValue[GlFloatType] = {
     GlFuncs.max(sdf1, sdf2)
   }
-
 
 }

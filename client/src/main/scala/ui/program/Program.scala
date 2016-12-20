@@ -10,12 +10,11 @@ import scala.collection.mutable
 
 import scala.scalajs.js
 
-class Program(
-               val gLContext: GLContext,
-               val vertShader: Shader,
-               val fragShader: Shader,
-               val attributes: Seq[Attribute] = Seq[Attribute](),
-               val uniforms: Seq[Uniform] = Seq[Uniform]()) {
+class Program(val gLContext: GLContext,
+              val vertShader: Shader,
+              val fragShader: Shader,
+              val attributes: Seq[Attribute] = Seq[Attribute](),
+              val uniforms: Seq[Uniform] = Seq[Uniform]()) {
 
   var program: Option[WebGLProgram] = None
 
@@ -56,17 +55,16 @@ class Program(
     })
   }
 
-  def ref: WebGLProgram = program match {
-    case Some(ref) => ref
-    case None => throw new Exception("No webgl reference")
-  }
+  def ref: WebGLProgram = program.getOrElse(throw new Exception("No webgl reference"))
 
   def draw(sceneItem: SceneItem, numItems: Int): Unit = {
-    if (startTime == 0) {
-      startTime = js.Date.now()
-    }
-    val elapsed = (js.Date.now() - startTime) / 1000d
-    uniformValuesF(Uniform("iGlobalTime", DataType.GlFloat)) = elapsed
+    uniformPositions.get(Uniform("iGlobalTime", DataType.GlFloat)).foreach(_ => {
+      if (startTime == 0) {
+        startTime = js.Date.now()
+      }
+      val elapsed = (js.Date.now() - startTime) / 1000d
+      uniformValuesF(Uniform("iGlobalTime", DataType.GlFloat)) = elapsed
+    })
     import dom.raw.WebGLRenderingContext._
     val gl = gLContext.gl
     // Activate shader attributes

@@ -1,5 +1,7 @@
 package ui
 
+import app.Scenes
+
 import scala.scalajs.js
 import org.scalajs.dom
 import ui.font.{FontFiles, TextLayout}
@@ -40,7 +42,7 @@ object ClientMain extends js.JSApp {
 
   def createSdfScene(context: GLContext): Unit = {
     val scene = new Scene(context)
-    val sdfScene = new SdfScene
+    val sdfScene = Scenes.main
     scene.items += sdfScene.createSceneItem(context)
     scene.init()
     scene.draw()
