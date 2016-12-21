@@ -12,15 +12,20 @@ object Scenes {
   def main: GlValue[GlVec4Type] = layeredScene
 
 
-
-  def layeredScene: GlValue[GlVec4Type] = layered(
-    anim3, Colors.greenBlue,
+  def layeredScene: GlValue[GlVec4Type] =
     layered(
-      anim4, Colors.bluePurple,
-      Colors.white,
-      0.2f
+      anim3(), Colors.greenBlue,
+      layered(
+        anim3(-0.02f), Colors.grey,
+        layered(
+          anim4, Colors.bluePurple,
+          Colors.white,
+          0.1f
+        ),
+        0.3f
+      ),
+      0.6f
     )
-  )
 
 
   // Combined
@@ -35,13 +40,13 @@ object Scenes {
 
 
   // Rotate around origin
-  def anim3: GlValue[GlFloatType] =
+  def anim3(tAdjustment: GlValue[GlFloatType] = GlFloatVal(0f)): GlValue[GlFloatType] =
     box(
       0.1f, 0.1f,
       pointRotateAroundOrigin(
-        animateFloat(0.1f, 1.8f),
-        0.3f, 0.3f,
-        pointTranslate(Vec2(-0.2f, -0.1f))
+        incrementFloat(0.1f, 1.8f, tAdjustment),
+        0.5f, 0.5f,
+        pointTranslate(Vec2(-0.5f, -0.5f), pointScale(1f, 1.5f))
       )
     )
 

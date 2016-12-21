@@ -14,7 +14,7 @@ object Colors {
   )
   def greenBlue: GlValue[GlVec4Type] = GlVec4Val.fv2f(
     1.0f,
-    GlVar("vPosition", GlVec2Type()) * GlFloatVal(0.5f) + 0.5f,
+    GlBraces(GlVar("vPosition", GlVec2Type()) * GlFloatVal(-0.5f) + 0.5f),
     1.0f
   )
 }

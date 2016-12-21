@@ -47,7 +47,7 @@ class GlFunction1[+T <: GlType, U <: GlType](identifier: String,
                                          val arg1: GlArgument[U],
                                          block: GlBlock) extends GlFunction[T](identifier, returnType, block) {
   override def toGlsl: String = {
-    s"$identifier(${arg1.toGlsl}) ${block.toGlsl}"
+    s"${returnType.toGlsl} $identifier(${arg1.toGlsl}) ${block.toGlsl}"
   }
 }
 
@@ -57,7 +57,7 @@ class GlFunction2[+T <: GlType, U <: GlType, V <: GlType](identifier: String,
                                                       val arg2: GlArgument[V],
                                          block: GlBlock) extends GlFunction[T](identifier, returnType, block) {
   override def toGlsl: String = {
-    s"$identifier(${arg1.toGlsl}, ${arg2.toGlsl}) ${block.toGlsl}"
+    s"${returnType.toGlsl} $identifier(${arg1.toGlsl}, ${arg2.toGlsl}) ${block.toGlsl}"
   }
 }
 
@@ -66,6 +66,6 @@ class GlFunction3[+T <: GlType, U <: GlType, V <: GlType, W <: GlType](identifie
                                                                    val arg1: GlArgument[U], val arg2: GlArgument[V], val arg3: GlArgument[W],
                                          block: GlBlock) extends GlFunction[T](identifier, returnType, block) {
   override def toGlsl: String = {
-    s"$identifier(${arg1.toGlsl}, ${arg2.toGlsl}, ${arg3.toGlsl}) ${block.toGlsl}"
+    s"${returnType.toGlsl} $identifier(${arg1.toGlsl}, ${arg2.toGlsl}, ${arg3.toGlsl}) ${block.toGlsl}"
   }
 }

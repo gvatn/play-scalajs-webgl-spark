@@ -20,8 +20,9 @@ class SdfScene {
   def createSceneItem(glContext: GLContext): SceneItem = {
     val program = new GlProgram(
       createVertexShader(),
-      createFragmentShader()
+      create3dFragmentShader()
     )
+    dom.console.log(create3dFragmentShader().toGlsl)
     new SceneItem(
       program.createProgram(glContext),
       Seq(
@@ -48,6 +49,96 @@ class SdfScene {
       GlBlock(
         GlAssign(GlGlobals.Position, GlVec4Val(GlVar("position", GlVec2Type()), 0f, 1f)),
         GlAssign(GlVar("vPosition", GlVec2Type()), GlVar("position", GlVec2Type()))
+      )
+    )
+  }
+
+  def create3dFragmentShader(): GlFragmentShader = {
+    new GlFragmentShader(
+      ListBuffer[GlAttribute[GlType]](),
+      ListBuffer[GlUniform[GlType]](
+        GlUniform("iGlobalTime", GlFloatType())
+      ),
+      ListBuffer[GlVarying[GlType]](
+        GlVarying("vPosition", GlVec2Type())
+      ),
+      GlBlock(
+        GlAssign.init(
+          GlVar("dir", GlVec3Type()),
+          GlCall("rayDirection", GlVec3Type())
+        ),
+        GlAssign.init(
+          GlVar("eye", GlVec3Type()),
+          GlVec3Val(0f, 0f, 5f)
+        ),
+        GlAssign.init(
+          GlVar("dist", GlFloatType()),
+          GlCall("shortestDistance", GlFloatType(), GlVar("eye", GlVec3Type()), GlVar("dir", GlVec3Type()))
+        ),
+        GlIf(
+          GlCompare(GlVar("dist", GlFloatType()), 100f),
+          GlBlock(
+            GlAssign(
+              GlGlobals.Color,
+              Colors.black
+            )
+          ),
+          Some(GlBlock(
+            GlAssign(
+              GlGlobals.Color,
+              Colors.grey
+            )
+          ))
+        )
+      ),
+      ListBuffer[GlFunction[GlType]](
+        GlFunction(
+          "sdfDist", GlFloatType(),
+          GlArgument("point", GlVec3Type()),
+          GlBlock(
+            GlReturn(GlFuncs.length(GlVar("point", GlVec3Type())) - 1f)
+          )
+        ),
+        GlFunction(
+          "rayDirection", GlVec3Type(),
+          GlBlock(
+            GlReturn(GlFuncs.normalize(GlVec3Val(
+              GlVar("vPosition", GlVec2Type()),
+              GlFloatVal(2f) / GlFuncs.tan(GlFuncs.radians(45f) / 2f) * -1f
+            )))
+          )
+        ),
+        GlFunction(
+          "shortestDistance", GlFloatType(),
+          GlArgument("eye", GlVec3Type()),
+          GlArgument("dir", GlVec3Type()),
+          GlBlock(
+            GlAssign.init(GlVar("depth", GlFloatType()), 0f),
+            GlAssign.init(GlVar("end", GlFloatType()), 100f),
+            GlForLoop(GlVar("i", GlIntType()), 255 /* max marching steps */, GlBlock(
+              GlAssign.init(GlVar("dist", GlFloatType()), GlCall("sdfDist", GlFloatType(), GlBraces(
+                GlVar("eye", GlVec3Type()) + GlVar("dir", GlVec3Type()) * GlVar("depth", GlFloatType())
+              ))),
+              /* if (i < epsilon) */
+              GlIf(
+                GlCompare(GlVar("dist", GlFloatType()), GlFloatVal(0.0001f), "<"),
+                GlBlock(
+                  GlReturn(GlVar("depth", GlFloatType()))
+                )
+              ),
+              /* Increment depth */
+              GlAssign.incr(GlVar("depth", GlFloatType()), GlVar("dist", GlFloatType())),
+              GlIf(
+                GlCompare(GlVar("depth", GlFloatType()), GlVar("end", GlFloatType()), ">="),
+                GlBlock(
+                  /* Moved beyond end */
+                  GlReturn(GlVar("end", GlFloatType()))
+                )
+              )
+            )),
+            GlReturn(GlVar("end", GlFloatType()))
+          )
+        )
       )
     )
   }
@@ -138,6 +229,11 @@ object SdfScene {
     )
   }
 
+  def pointScale(scaleX: GlValue[GlFloatType], scaleY: GlValue[GlFloatType],
+                     point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
+    GlBraces(point * GlVec2Val(scaleX, scaleY))
+  }
+
   def pointRotate(rotation: GlValue[GlFloatType],
                   point: GlValue[GlVec2Type] = GlVar("vPosition", GlVec2Type())): GlValue[GlVec2Type] = {
     GlBraces(
@@ -184,6 +280,13 @@ object SdfScene {
                    tAdjustment: GlValue[GlFloatType] = new GlFloatVal(0f)): GlValue[GlFloatType] = {
 
     constant + GlBraces(coef * GlFuncs.sin(GlVar("iGlobalTime", GlFloatType()) + tAdjustment))
+  }
+
+  def incrementFloat(constant: GlValue[GlFloatType] = new GlFloatVal(0f),
+                   coef: GlValue[GlFloatType] = new GlFloatVal(1f),
+                   tAdjustment: GlValue[GlFloatType] = new GlFloatVal(0f)): GlValue[GlFloatType] = {
+
+    constant + GlBraces(coef * GlBraces(GlVar("iGlobalTime", GlFloatType()) + tAdjustment))
   }
 
   def smoothBorder(glValue: GlValue[GlFloatType]): GlValue[GlFloatType] = {
