@@ -54,6 +54,10 @@ class SdfScene {
   }
 
   def create3dFragmentShader(): GlFragmentShader = {
+    val epsilon = GlFloatVal(0.0001f)
+    val minDist = GlFloatVal(0f)
+    val maxDist = GlFloatVal(100f)
+    val marchingSteps = GlIntVal(255)
     new GlFragmentShader(
       ListBuffer[GlAttribute[GlType]](),
       ListBuffer[GlUniform[GlType]](
@@ -63,30 +67,35 @@ class SdfScene {
         GlVarying("vPosition", GlVec2Type())
       ),
       GlBlock(
-        GlAssign.init(
-          GlVar("dir", GlVec3Type()),
-          GlCall("rayDirection", GlVec3Type())
-        ),
-        GlAssign.init(
+        GlAssign.init(GlVar("dir", GlVec3Type()), GlCall("rayDirection", GlVec3Type())),
+        GlAssign.init(GlVar("eye", GlVec3Type()), GlVec3Val(0f, 0f, 5f)),
+        GlAssign.init(GlVar("dist", GlFloatType()), GlCall("shortestDistance", GlFloatType(),
           GlVar("eye", GlVec3Type()),
-          GlVec3Val(0f, 0f, 5f)
-        ),
-        GlAssign.init(
-          GlVar("dist", GlFloatType()),
-          GlCall("shortestDistance", GlFloatType(), GlVar("eye", GlVec3Type()), GlVar("dir", GlVec3Type()))
+          GlVar("dir", GlVec3Type()))
         ),
         GlIf(
-          GlCompare(GlVar("dist", GlFloatType()), 100f),
+          GlCompare(GlVar("dist", GlFloatType()), maxDist - epsilon),
           GlBlock(
-            GlAssign(
-              GlGlobals.Color,
-              Colors.black
-            )
+            GlAssign(GlGlobals.Color, Colors.black)
           ),
           Some(GlBlock(
+            GlAssign.init(GlVar("p", GlVec3Type()), GlVec3Val("eye") + GlFloatVal("dist") * GlVec3Val("dir")),
+            GlAssign.init(GlVar("K_a", GlVec3Type()), GlVec3Val(0.2f, 0.2f, 0.2f)),
+            GlAssign.init(GlVar("K_d", GlVec3Type()), GlVec3Val(0.7f, 0.2f, 0.2f)),
+            GlAssign.init(GlVar("K_s", GlVec3Type()), GlVec3Val(1f, 1f, 1f)),
+            GlAssign.init(GlVar("shininess", GlFloatType()), GlFloatVal(10f)),
+            GlAssign.init(GlVar("color", GlVec3Type()), GlCall(
+              "phongIllumination", GlVec3Type(),
+              GlVec3Val("K_a"),
+              GlVec3Val("K_d"),
+              GlVec3Val("K_s"),
+              GlFloatVal("shininess"),
+              GlVec3Val("p"),
+              GlVec3Val("eye")
+            )),
             GlAssign(
               GlGlobals.Color,
-              Colors.grey
+              GlVec4Val.v3f(GlVec3Val("color"), 1f)
             )
           ))
         )
@@ -109,19 +118,132 @@ class SdfScene {
           )
         ),
         GlFunction(
+          "estimateNormal", GlVec3Type(),
+          GlArgument("point", GlVec3Type()),
+          GlBlock(
+            GlReturn(GlFuncs.normalize(GlVec3Val(
+              /* x */
+              GlCall(
+                "sdfDist", GlFloatType(),
+                GlVec3Val(
+                  GlVec3Val("point").x + epsilon,
+                  GlVec3Val("point").y,
+                  GlVec3Val("point").z
+                )
+              ) - GlCall(
+                "sdfDist", GlFloatType(),
+                GlVec3Val(
+                  GlVec3Val("point").x - epsilon,
+                  GlVec3Val("point").y,
+                  GlVec3Val("point").z
+                )
+              ),
+              /* y */
+              GlCall(
+                "sdfDist", GlFloatType(),
+                GlVec3Val(
+                  GlVec3Val("point").x,
+                  GlVec3Val("point").y + epsilon,
+                  GlVec3Val("point").z
+                )
+              ) - GlCall(
+                "sdfDist", GlFloatType(),
+                GlVec3Val(
+                  GlVec3Val("point").x,
+                  GlVec3Val("point").y - epsilon,
+                  GlVec3Val("point").z
+                )
+              ),
+              /* z */
+              GlCall(
+                "sdfDist", GlFloatType(),
+                GlVec3Val(
+                  GlVec3Val("point").x,
+                  GlVec3Val("point").y,
+                  GlVec3Val("point").z + epsilon
+                )
+              ) - GlCall(
+                "sdfDist", GlFloatType(),
+                GlVec3Val(
+                  GlVec3Val("point").x,
+                  GlVec3Val("point").y,
+                  GlVec3Val("point").z - epsilon
+                )
+              )
+            )
+            ))
+          )
+        ),
+        GlFunction(
+          "phongContribForLight", GlVec3Type(),
+          GlArgument("k_d", GlVec3Type()),
+          GlArgument("k_s", GlVec3Type()),
+          GlArgument("alpha", GlFloatType()),
+          GlArgument("point", GlVec3Type()),
+          GlArgument("eye", GlVec3Type()),
+          GlArgument("lightPos", GlVec3Type()),
+          GlArgument("lightIntensity", GlVec3Type()),
+          GlBlock(
+            GlAssign.init(GlVar("N", GlVec3Type()), GlCall("estimateNormal", GlVec3Type(), GlVec3Val("point"))),
+            GlAssign.init(GlVar("L", GlVec3Type()), GlFuncs.normalize(GlVec3Val("lightPos") - GlVec3Val("point"))),
+            GlAssign.init(GlVar("V", GlVec3Type()), GlFuncs.normalize(GlVec3Val("eye") - GlVec3Val("point"))),
+            GlAssign.init(GlVar("R", GlVec3Type()), GlFuncs.reflect(GlVec3Val("L") * -1f, GlVec3Val("N"))),
+            GlAssign.init(GlVar("dotLN", GlFloatType()), GlFuncs.dot(GlVec3Val("L"), GlVec3Val("N"))),
+            GlAssign.init(GlVar("dotRV", GlFloatType()), GlFuncs.dot(GlVec3Val("R"), GlVec3Val("V"))),
+            GlIf(GlFloatVal("dotLN") < 0f, GlBlock(
+              /* Light not visible from this point on the surface */
+              GlReturn(GlVec3Val("lightIntensity") * GlBraces(GlVec3Val("k_d") * GlFloatVal("dotLN")))
+            )),
+            GlReturn(GlVec3Val("lightIntensity") * GlBraces(
+              GlVec3Val("k_d") * GlFloatVal("dotLN")) + GlVec3Val("k_s") * GlFuncs.pow(GlFloatVal("dotRV"), GlFloatVal("alpha"))
+            )
+          )
+        ),
+        GlFunction(
+          "phongIllumination", GlVec3Type(),
+          GlArgument("k_a", GlVec3Type()),
+          GlArgument("k_d", GlVec3Type()),
+          GlArgument("k_s", GlVec3Type()),
+          GlArgument("alpha", GlFloatType()),
+          GlArgument("point", GlVec3Type()),
+          GlArgument("eye", GlVec3Type()),
+          GlBlock(
+            GlAssign.init(GlVar("ambientLight", GlVec3Type()), GlVec3Val(0.5f, 0.5f, 0.5f)),
+            GlAssign.init(GlVar("color", GlVec3Type()), GlVec3Val("ambientLight") * GlVec3Val("k_a")),
+            GlAssign.init(GlVar("lightPos", GlVec3Type()), GlVec3Val(
+              GlFuncs.sin(GlFloatVal("iGlobalTime")) * 4f,
+              2f,
+              GlFuncs.cos(GlFloatVal("iGlobalTime")) * 4f)
+            ),
+            GlAssign.init(GlVar("lightIntensity", GlVec3Type()), GlVec3Val(0.4f, 0.4f, 0.4f)),
+            GlAssign.incr(GlVar("color", GlVec3Type()), GlCall(
+              "phongContribForLight", GlVec3Type(),
+              GlVec3Val("k_d"),
+              GlVec3Val("k_s"),
+              GlFloatVal("alpha"),
+              GlVec3Val("point"),
+              GlVec3Val("eye"),
+              GlVec3Val("lightPos"),
+              GlVec3Val("lightIntensity")
+            )),
+            GlReturn(GlVec3Val("color"))
+          )
+        ),
+        GlFunction(
           "shortestDistance", GlFloatType(),
           GlArgument("eye", GlVec3Type()),
           GlArgument("dir", GlVec3Type()),
           GlBlock(
-            GlAssign.init(GlVar("depth", GlFloatType()), 0f),
-            GlAssign.init(GlVar("end", GlFloatType()), 100f),
-            GlForLoop(GlVar("i", GlIntType()), 255 /* max marching steps */, GlBlock(
-              GlAssign.init(GlVar("dist", GlFloatType()), GlCall("sdfDist", GlFloatType(), GlBraces(
-                GlVar("eye", GlVec3Type()) + GlVar("dir", GlVec3Type()) * GlVar("depth", GlFloatType())
-              ))),
+            GlAssign.init(GlVar("depth", GlFloatType()), minDist),
+            GlAssign.init(GlVar("end", GlFloatType()), maxDist),
+            GlForLoop(GlVar("i", GlIntType()), marchingSteps, GlBlock(
+              GlAssign.init(GlVar("dist", GlFloatType()), GlCall(
+                "sdfDist", GlFloatType(),
+                GlVar("eye", GlVec3Type()) + GlVar("depth", GlVec3Type()) * GlVar("dir", GlFloatType())
+              )),
               /* if (i < epsilon) */
               GlIf(
-                GlCompare(GlVar("dist", GlFloatType()), GlFloatVal(0.0001f), "<"),
+                GlCompare(GlVar("dist", GlFloatType()), epsilon, "<"),
                 GlBlock(
                   GlReturn(GlVar("depth", GlFloatType()))
                 )
@@ -275,16 +397,16 @@ object SdfScene {
     GlFuncs.mod(point, distance) - GlBraces(distance * 0.5f)
   }
 
-  def animateFloat(constant: GlValue[GlFloatType] = new GlFloatVal(0f),
-                   coef: GlValue[GlFloatType] = new GlFloatVal(1f),
-                   tAdjustment: GlValue[GlFloatType] = new GlFloatVal(0f)): GlValue[GlFloatType] = {
+  def animateFloat(constant: GlValue[GlFloatType] = GlFloatVal(0f),
+                   coef: GlValue[GlFloatType] = GlFloatVal(1f),
+                   tAdjustment: GlValue[GlFloatType] = GlFloatVal(0f)): GlValue[GlFloatType] = {
 
     constant + GlBraces(coef * GlFuncs.sin(GlVar("iGlobalTime", GlFloatType()) + tAdjustment))
   }
 
-  def incrementFloat(constant: GlValue[GlFloatType] = new GlFloatVal(0f),
-                   coef: GlValue[GlFloatType] = new GlFloatVal(1f),
-                   tAdjustment: GlValue[GlFloatType] = new GlFloatVal(0f)): GlValue[GlFloatType] = {
+  def incrementFloat(constant: GlValue[GlFloatType] = GlFloatVal(0f),
+                   coef: GlValue[GlFloatType] = GlFloatVal(1f),
+                   tAdjustment: GlValue[GlFloatType] = GlFloatVal(0f)): GlValue[GlFloatType] = {
 
     constant + GlBraces(coef * GlBraces(GlVar("iGlobalTime", GlFloatType()) + tAdjustment))
   }

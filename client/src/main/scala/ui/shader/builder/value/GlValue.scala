@@ -1,8 +1,8 @@
 package ui.shader.builder.value
 
 import ui.math.Vec2
-import ui.shader.builder.{GlAdd, GlDivide, GlMultiply, GlSubtract}
-import ui.shader.builder.types.{GlFloatType, GlIntType, GlType, GlVec2Type}
+import ui.shader.builder._
+import ui.shader.builder.types._
 
 abstract class GlValue[+T <: GlType] {
   def toGlsl: String
@@ -21,6 +21,14 @@ abstract class GlValue[+T <: GlType] {
 
   def /[U <: GlType](that: GlValue[U]): GlValue[T] = {
     GlDivide(this, that)
+  }
+
+  def <[U <: GlType](that: GlValue[U]): GlValue[GlBoolType] = {
+    GlCompare(this, that, ">")
+  }
+
+  def >[U <: GlType](that: GlValue[U]): GlValue[GlBoolType] = {
+    GlCompare(this, that, "<")
   }
 }
 

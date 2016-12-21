@@ -43,6 +43,18 @@ object GlFuncs {
     GlCall("normalize", typeClass.typeObj, x)
   }
 
+  def reflect[T <: GlType](x: GlValue[T], y: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[T] = {
+    GlCall("reflect", typeClass.typeObj, x, y)
+  }
+
+  def dot[T <: GlType](x: GlValue[T], y: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[GlFloatType] = {
+    GlCall("dot", GlFloatType(), x, y)
+  }
+
+  def pow[T <: GlType](x: GlValue[T], y: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[T] = {
+    GlCall("pow", typeClass.typeObj, x, y)
+  }
+
   def mix[T <: GlType](x: GlValue[GlVec4Type], y: GlValue[GlVec4Type], mix: GlValue[T]): GlValue[GlVec4Type] = {
     GlCall("mix", GlVec4Type(), x, y, mix)
   }

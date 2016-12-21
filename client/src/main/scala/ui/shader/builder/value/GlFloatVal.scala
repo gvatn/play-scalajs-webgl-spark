@@ -2,7 +2,25 @@ package ui.shader.builder.value
 
 import ui.shader.builder.types.GlFloatType
 
-class GlFloatVal(float: Float) extends GlValue[GlFloatType] {
+abstract class GlFloatVal extends GlValue[GlFloatType] {
+
+}
+
+object GlFloatVal {
+  def apply(float: Float): GlValue[GlFloatType] = {
+    new GlFloatValF(float)
+  }
+
+  def apply(varName: String): GlValue[GlFloatType] = {
+    new GlFloatValVar(varName)
+  }
+
+  implicit def floatToVal(float: Float): GlValue[GlFloatType] = {
+    new GlFloatValF(float)
+  }
+}
+
+class GlFloatValF(float: Float) extends GlValue[GlFloatType] {
   override def toGlsl: String = {
     val formatted = f"$float%8.20f"
     val dotPos = formatted.indexOf('.')
@@ -11,12 +29,8 @@ class GlFloatVal(float: Float) extends GlValue[GlFloatType] {
   }
 }
 
-object GlFloatVal {
-  def apply(float: Float): GlFloatVal = {
-    new GlFloatVal(float)
-  }
-
-  implicit def floatToVal(float: Float): GlFloatVal = {
-    new GlFloatVal(float)
+class GlFloatValVar(name: String) extends GlValue[GlFloatType] {
+  override def toGlsl: String = {
+    name
   }
 }

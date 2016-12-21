@@ -6,6 +6,18 @@ abstract class GlVec3Val extends GlValue[GlVec3Type] {
   def xy: GlValue[GlVec2Type] = {
     GlVec2Val(this)
   }
+
+  def x: GlValue[GlFloatType] = {
+    new GlVec3ValX(this)
+  }
+
+  def y: GlValue[GlFloatType] = {
+    new GlVec3ValY(this)
+  }
+
+  def z: GlValue[GlFloatType] = {
+    new GlVec3ValZ(this)
+  }
 }
 
 object GlVec3Val {
@@ -23,23 +35,53 @@ object GlVec3Val {
   def apply(vec3: GlValue[GlVec3Type]): GlVec3Val = {
     new GlVec3ValV3F(vec3)
   }
+
+  def apply(name: String): GlVec3Val = {
+    new GlVec3ValVar(name)
+  }
 }
 
-class GlVec3ValF(val x: GlValue[GlFloatType],
-                val y: GlValue[GlFloatType],
-                val z: GlValue[GlFloatType]) extends GlVec3Val {
+class GlVec3ValX(val vec3: GlValue[GlVec3Type]) extends GlValue[GlFloatType] {
+  override def toGlsl: String = {
+    s"${vec3.toGlsl}.x"
+  }
+}
+
+class GlVec3ValY(val vec3: GlValue[GlVec3Type]) extends GlValue[GlFloatType] {
+  override def toGlsl: String = {
+    s"${vec3.toGlsl}.y"
+  }
+}
+
+class GlVec3ValZ(val vec3: GlValue[GlVec3Type]) extends GlValue[GlFloatType] {
+  override def toGlsl: String = {
+    s"${vec3.toGlsl}.z"
+  }
+}
+
+class GlVec3ValVar(val name: String) extends GlVec3Val {
 
   override def toGlsl: String = {
-    "vec3(" + x.toGlsl + ", " + y.toGlsl + ", " + z.toGlsl + ")"
+    name
+  }
+
+}
+
+class GlVec3ValF(val xVal: GlValue[GlFloatType],
+                val yVal: GlValue[GlFloatType],
+                val zVal: GlValue[GlFloatType]) extends GlVec3Val {
+
+  override def toGlsl: String = {
+    "vec3(" + xVal.toGlsl + ", " + yVal.toGlsl + ", " + zVal.toGlsl + ")"
   }
 
 }
 
 class GlVec3ValV2F(val vec2: GlValue[GlVec2Type],
-                   val z: GlValue[GlFloatType]) extends GlVec3Val {
+                   val zVal: GlValue[GlFloatType]) extends GlVec3Val {
 
   override def toGlsl: String = {
-    "vec3(" + vec2.toGlsl + ", " + z.toGlsl + ")"
+    "vec3(" + vec2.toGlsl + ", " + zVal.toGlsl + ")"
   }
 }
 
