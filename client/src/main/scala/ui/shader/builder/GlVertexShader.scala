@@ -21,7 +21,7 @@ class GlVertexShader(val attributes: ListBuffer[GlAttribute[GlType]] = ListBuffe
       s"${attributes.foldLeft("")(_ + _.toGlsl)}" +
       s"${uniforms.foldLeft("")(_ + _.toGlsl)}\n" +
       s"${varyings.foldLeft("")(_ + _.toGlsl)}\n" +
-      s"${functions.foldLeft("")(_ + _.toGlsl)}\n" +
+      s"${functions.foldLeft("")(_ + _.toGlsl + "\n\n")}\n" +
       s"${mainFunction.toGlsl}"
   }
 }

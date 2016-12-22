@@ -5,11 +5,27 @@ import ui.sdf.SdfScene
 import ui.sdf.SdfScene._
 import ui.shader.builder.Colors
 import ui.shader.builder.types.{GlFloatType, GlVec4Type}
-import ui.shader.builder.value.{GlFloatVal, GlValue, GlVec2Val}
+import ui.shader.builder.value.{GlFloatVal, GlValue, GlVec2Val, GlVec3Val}
 
 object Scenes {
 
   def main: GlValue[GlVec4Type] = layeredScene
+  def main3d: GlValue[GlFloatType] = threeAnim1
+
+  def threeAnim2: GlValue[GlFloatType] = {
+    box3d(0.5, 0.5, 0.5, 0.002d)
+  }
+
+
+  // Repeated circles
+  def threeAnim3: GlValue[GlFloatType] = {
+    sphere(0.15, repeatPoint3d(GlVec3Val(1.3, 1.3, 1.3)))
+  }
+
+  // Repeated boxes
+  def threeAnim1: GlValue[GlFloatType] = {
+    box3d(0.1, 0.1, 0.1, 0d, repeatPoint3d(GlVec3Val(1.3, 1.3, 1.3)))
+  }
 
 
   def layeredScene: GlValue[GlVec4Type] =

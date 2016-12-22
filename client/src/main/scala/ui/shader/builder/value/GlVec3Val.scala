@@ -1,6 +1,6 @@
 package ui.shader.builder.value
 
-import ui.shader.builder.types.{GlFloatType, GlVec2Type, GlVec3Type}
+import ui.shader.builder.types.{GlFloatType, GlVec2Type, GlVec3Type, GlVec4Type}
 
 abstract class GlVec3Val extends GlValue[GlVec3Type] {
   def xy: GlValue[GlVec2Type] = {
@@ -30,6 +30,11 @@ object GlVec3Val {
   def apply(vec2: GlValue[GlVec2Type],
             z: GlValue[GlFloatType]): GlVec3Val = {
     new GlVec3ValV2F(vec2, z)
+  }
+
+  def xv2(x: GlValue[GlFloatType],
+            vec2: GlValue[GlVec2Type]): GlVec3Val = {
+    new GlVec3ValFV2(x, vec2)
   }
 
   def apply(vec3: GlValue[GlVec3Type]): GlVec3Val = {
@@ -67,6 +72,14 @@ class GlVec3ValVar(val name: String) extends GlVec3Val {
 
 }
 
+class GlVec3ValVec4(val vec4: GlValue[GlVec4Type]) extends GlVec3Val {
+
+  override def toGlsl: String = {
+    s"vec3(${vec4.toGlsl}.x, ${vec4.toGlsl}.y, ${vec4.toGlsl}.z)"
+  }
+
+}
+
 class GlVec3ValF(val xVal: GlValue[GlFloatType],
                 val yVal: GlValue[GlFloatType],
                 val zVal: GlValue[GlFloatType]) extends GlVec3Val {
@@ -82,6 +95,14 @@ class GlVec3ValV2F(val vec2: GlValue[GlVec2Type],
 
   override def toGlsl: String = {
     "vec3(" + vec2.toGlsl + ", " + zVal.toGlsl + ")"
+  }
+}
+
+class GlVec3ValFV2(val xVal: GlValue[GlFloatType],
+                   val vec2: GlValue[GlVec2Type]) extends GlVec3Val {
+
+  override def toGlsl: String = {
+    "vec3(" + xVal.toGlsl + ", " + vec2.toGlsl + ")"
   }
 }
 

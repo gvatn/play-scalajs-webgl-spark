@@ -3,6 +3,8 @@ package ui.shader.builder.value
 import ui.shader.builder.types.{GlFloatType, GlVec2Type, GlVec3Type}
 
 abstract class GlVec2Val extends GlValue[GlVec2Type] {
+  def x: GlVec2ValX = new GlVec2ValX(this)
+  def y: GlVec2ValY = new GlVec2ValY(this)
 }
 
 object GlVec2Val {
@@ -19,9 +21,22 @@ object GlVec2Val {
   }
 }
 
-class GlVec2ValFF(val x: GlValue[GlFloatType], val y: GlValue[GlFloatType]) extends GlVec2Val {
+class GlVec2ValX(val vec2: GlValue[GlVec2Type]) extends GlValue[GlFloatType] {
   override def toGlsl: String = {
-    "vec2(" + x.toGlsl + ", " + y.toGlsl + ")"
+    s"${vec2.toGlsl}.x"
+  }
+}
+
+class GlVec2ValY(val vec2: GlValue[GlVec2Type]) extends GlValue[GlFloatType] {
+  override def toGlsl: String = {
+    s"${vec2.toGlsl}.y"
+  }
+}
+
+class GlVec2ValFF(val xVal: GlValue[GlFloatType],
+                  val yVal: GlValue[GlFloatType]) extends GlVec2Val {
+  override def toGlsl: String = {
+    "vec2(" + xVal.toGlsl + ", " + yVal.toGlsl + ")"
   }
 }
 

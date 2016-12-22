@@ -7,4 +7,5 @@ object GlGlobals {
   trait GlslGlobal
   object Position extends GlVar("gl_Position", GlVec4Type()) with GlslGlobal
   object Color extends GlVar("gl_FragColor", GlVec4Type()) with GlslGlobal
+  object FragCoord extends GlVar("gl_FragCoord", GlVec4Type()) with GlslGlobal
 }

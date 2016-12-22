@@ -19,8 +19,8 @@ object GlFuncs {
     GlCall("min", GlFloatType(), x, y)
   }
 
-  def max(x: GlValue[GlFloatType], y: GlValue[GlFloatType]): GlValue[GlFloatType] = {
-    GlCall("max", GlFloatType(), x, y)
+  def max[T <: GlType](x: GlValue[T], y: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[T] = {
+    GlCall("max", typeClass.typeObj, x, y)
   }
 
   def sin[T <: GlType](x: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[T] = {
@@ -51,6 +51,11 @@ object GlFuncs {
     GlCall("dot", GlFloatType(), x, y)
   }
 
+  // Cross product, only vec3
+  def cross(x: GlValue[GlVec3Type], y: GlValue[GlVec3Type]): GlValue[GlVec3Type] = {
+    GlCall("cross", GlVec3Type(), x, y)
+  }
+
   def pow[T <: GlType](x: GlValue[T], y: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[T] = {
     GlCall("pow", typeClass.typeObj, x, y)
   }
@@ -63,12 +68,12 @@ object GlFuncs {
     GlCall("length", GlFloatType(), x)
   }
 
-  def abs(x: GlValue[GlVec2Type]): GlValue[GlVec2Type] = {
-    GlCall("abs", GlVec2Type(), x)
+  def abs[T <: GlType](x: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[T] = {
+    GlCall("abs", typeClass.typeObj, x)
   }
 
-  def mod(x: GlValue[GlVec2Type],
-          y: GlValue[GlVec2Type]): GlValue[GlVec2Type] = {
-    GlCall("mod", GlVec2Type(), x, y)
+  def mod[T <: GlType](x: GlValue[T],
+          y: GlValue[T])(implicit typeClass: GlTypeClass[T]): GlValue[T] = {
+    GlCall("mod", typeClass.typeObj, x, y)
   }
 }

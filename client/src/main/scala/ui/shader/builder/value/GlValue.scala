@@ -24,16 +24,20 @@ abstract class GlValue[+T <: GlType] {
   }
 
   def <[U <: GlType](that: GlValue[U]): GlValue[GlBoolType] = {
-    GlCompare(this, that, ">")
+    GlCompare(this, that, "<")
   }
 
   def >[U <: GlType](that: GlValue[U]): GlValue[GlBoolType] = {
-    GlCompare(this, that, "<")
+    GlCompare(this, that, ">")
   }
 }
 
 // Implicits available when used as parameter
 object GlValue {
+  implicit def doubleToGlVal(double: Double): GlValue[GlFloatType] = {
+    GlFloatVal(double)
+  }
+
   implicit def floatToGlVal(float: Float): GlValue[GlFloatType] = {
     GlFloatVal(float)
   }

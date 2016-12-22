@@ -5,9 +5,9 @@ import org.scalajs.dom.raw.{WebGLProgram, WebGLShader, WebGLUniformLocation}
 import ui.scene.SceneItem
 import ui.shader.Shader
 import ui.GLContext
+import ui.math.{Vec2, Vec3}
 
 import scala.collection.mutable
-
 import scala.scalajs.js
 
 class Program(val gLContext: GLContext,
@@ -23,6 +23,9 @@ class Program(val gLContext: GLContext,
   val uniformPositions: mutable.Map[Uniform,WebGLUniformLocation] = mutable.Map[Uniform,WebGLUniformLocation]()
 
   val uniformValuesF: mutable.Map[Uniform,Double] = mutable.Map[Uniform,Double]()
+  val uniformValuesI: mutable.Map[Uniform,Int] = mutable.Map[Uniform,Int]()
+  val uniformValuesV3: mutable.Map[Uniform,Vec3[Double]] = mutable.Map[Uniform,Vec3[Double]]()
+  val uniformValuesV2: mutable.Map[Uniform,Vec2] = mutable.Map[Uniform,Vec2]()
 
   var startTime: Double = 0d
 
@@ -51,6 +54,12 @@ class Program(val gLContext: GLContext,
       uniform.dataType match {
         case DataType.GlFloat =>
           uniformValuesF(uniform) = 0.0f
+        case DataType.GlVec3 =>
+          uniformValuesV3(uniform) = Vec3.zeros
+        case DataType.GlVec2 =>
+          uniformValuesV2(uniform) = Vec2(0.0f, 0.0f)
+        case DataType.GlInt =>
+          uniformValuesI(uniform) = 0
       }
     })
   }
@@ -93,6 +102,14 @@ class Program(val gLContext: GLContext,
       uniform.dataType match {
         case DataType.GlFloat =>
           gl.uniform1f(uniformPositions(uniform), uniformValuesF(uniform))
+        case DataType.GlInt =>
+          gl.uniform1i(uniformPositions(uniform), uniformValuesI(uniform))
+        case DataType.GlVec3 =>
+          val vec3Values = uniformValuesV3(uniform)
+          gl.uniform3f(uniformPositions(uniform), vec3Values.x, vec3Values.y, vec3Values.z)
+        case DataType.GlVec2 =>
+          val vec2Values = uniformValuesV2(uniform)
+          gl.uniform2f(uniformPositions(uniform), vec2Values.x, vec2Values.y)
       }
     })
     // Time uniform

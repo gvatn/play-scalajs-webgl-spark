@@ -6,7 +6,7 @@ import scala.scalajs.js
 import org.scalajs.dom
 import ui.font.{FontFiles, TextLayout}
 import org.scalajs.dom.raw.{MessageEvent, WebSocket}
-import ui.math.Vec4
+import ui.math.{Vec3, Vec4}
 import ui.program.{Attribute, DataType, Program, Uniform}
 import ui.scene._
 import ui.sdf.SdfScene
@@ -28,7 +28,7 @@ object ClientMain extends js.JSApp {
 
     val test = "156284532k"
 
-    createSdfScene(glContext)
+    createSdf3dScene(glContext)
 
     /*
     */
@@ -40,6 +40,20 @@ object ClientMain extends js.JSApp {
     webSocket.onopen = onWebsocketConn _
     */
 
+  }
+
+  def createSdf3dScene(context: GLContext): Unit = {
+    val scene = new Scene(context)
+    val sdfScene = new SdfScene(true) {
+      override def sdfShape3d: GlValue[GlFloatType] = Scenes.main3d
+    }
+    scene.items += sdfScene.createSceneItem(context)
+    scene.sceneModules += new Navigator(
+      pos = Vec3(8.0, 5.0, 5.0),
+      direction = Vec3(0.0, 2.0, -1.0)
+    )
+    scene.init()
+    scene.draw()
   }
 
   def createSdfScene(context: GLContext): Unit = {

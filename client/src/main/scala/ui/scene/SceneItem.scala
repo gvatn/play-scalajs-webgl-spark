@@ -22,8 +22,9 @@ class SceneItem(val program: Program,
   var modelMatrixUniform: WebGLUniformLocation = _
 
 
-  def modelMatrix(): Mat3 = {
+  def modelMatrix(): Mat3[Double] = {
     // Translation, rotation and scale
+    /*
     Mat3(Seq(
       1f, 0f, 0f,
       0f, 1f, 0f,
@@ -36,7 +37,22 @@ class SceneItem(val program: Program,
       scale.x, 0f, 0f,
       0f, scale.y, 0f,
       0f, 0f, 1f
-    ))
+    ))*/
+
+    import Mat3._
+    Mat3[Double](
+      1.0, 0.0, 0.0,
+      0.0, 1.0, 0.0,
+      translate.x, translate.y, 1.0
+    ) * Mat3[Double](
+      math.cos(rotate.y), -math.sin(rotate.y), 0.0,
+      math.sin(rotate.y), math.cos(rotate.y), 0.0,
+      0.0, 0.0, 1.0
+    ) * Mat3[Double](
+      scale.x, 0.0, 0.0,
+      0.0, scale.y, 0.0,
+      0.0, 0.0, 1.0
+    )
   }
 
   def init(): Unit = {
@@ -63,6 +79,7 @@ class SceneItem(val program: Program,
     if (indexBuffer != null) {
       indexBuffer.bind(gl)
     }
+    import Mat3._
     gl.uniformMatrix3fv(modelMatrixUniform, false, modelMatrix())
     var i = 0
     // Texture as uniform

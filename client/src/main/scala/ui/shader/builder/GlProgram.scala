@@ -12,7 +12,12 @@ class GlProgram(val vertexShader: GlVertexShader,
       vertexShader.createShader(),
       fragmentShader.createShader(),
       Seq(Attribute("position", DataType.GlFloat, 2)),
-      Seq(Uniform("iGlobalTime", DataType.GlFloat))
+      Seq(
+        Uniform("iGlobalTime", DataType.GlFloat),
+        Uniform("uCameraPos", DataType.GlVec3),
+        Uniform("uCameraDir", DataType.GlVec3),
+        Uniform("uViewport", DataType.GlVec2)
+      )
     )
   }
 }
